@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Interactivo: Arquetipos de Ingeniería de Software</title>
+
+    <!-- Chart.js for radar chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- Google Fonts --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Slab:wght@700&display=swap');
+
+        /* --- CSS Variables for Theming --- */
+        :root {
+            --primary-color: #3b82f6;
+            /* Blue 500 */
+            --primary-color-dark: #2563eb;
+            /* Blue 600 */
+            --accent-color: #f59e0b;
+            /* Amber 500 */
+            --text-color: #1f2937;
+            /* Gray 800 */
+            --text-muted-color: #6b7280;
+            /* Gray 500 */
+            --bg-color: #f9fafb;
+            /* Gray 50 */
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            /* Gray 200 */
+            --shadow-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa;
+            /* Blue 400 */
+            --primary-color-dark: #3b82f6;
+            /* Blue 500 */
+            --accent-color: #fcd34d;
+            /* Amber 300 */
+            --text-color: #f9fafb;
+            /* Gray 50 */
+            --text-muted-color: #9ca3af;
+            /* Gray 400 */
+            --bg-color: #111827;
+            /* Gray 900 */
+            --card-bg: #1f2937;
+            /* Gray 800 */
+            --border-color: #374151;
+            /* Gray 700 */
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- General Styles --- */
+        * {
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- Header & Theme Toggle --- */
+        .header {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .theme-switcher {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            background-color: var(--card-bg);
+            padding: 0.5rem;
+            border-radius: 99px;
+            border: 1px solid var(--border-color);
+        }
+
+        .theme-switcher svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-muted-color);
+        }
+
+        #icon-sun {
+            display: none;
+        }
+
+        [data-theme="dark"] #icon-sun {
+            display: block;
+        }
+
+        [data-theme="dark"] #icon-moon {
+            display: none;
+        }
+
+        /* --- Typography --- */
+        h1,
+        h2 {
+            font-family: 'Roboto Slab', serif;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 3rem;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .intro {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-muted-color);
+            margin: 1rem auto 3rem;
+            max-width: 600px;
+        }
+
+        /* --- Quiz Container --- */
+        #quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Progress Bar --- */
+        #progress-bar-container {
+            width: 100%;
+            background-color: var(--border-color);
+            border-radius: 99px;
+            height: 10px;
+            margin-bottom: 2rem;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 99px;
+            transition: width 0.4s ease-in-out;
+        }
+
+        /* --- Question & Options --- */
+        .question-wrapper {
+            flex-grow: 1;
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
+
+        .question-wrapper.fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .question-text {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .options-list li {
+            margin-bottom: 0.75rem;
+        }
+
+        .options-list label {
+            display: block;
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .options-list label:hover {
+            border-color: var(--primary-color);
+            background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+        }
+
+        .options-list input[type="radio"] {
+            display: none;
+        }
+
+        /* --- Results Section --- */
+        #results-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        #results-section.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #chart-container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        .archetype-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .archetype-card.primary {
+            border-left: 6px solid var(--primary-color);
+        }
+
+        .archetype-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .archetype-title {
+            font-family: 'Roboto Slab', serif;
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            margin: 0;
+        }
+
+        .archetype-score {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background-color: var(--accent-color);
+            color: #1f2937;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+        }
+
+        .archetype-card h3 {
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .role-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .role-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color-dark);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .role-link:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>Tu Arquetipo de Ingeniero</h1>
+            <div class="theme-switcher" id="theme-switcher" title="Cambiar tema">
+                <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 008.25-4.502z" />
+                </svg>
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.909-2.636l1.591-1.591M5.25 12H3m4.21-4.909l-1.591-1.591M12 12a2.25 2.25 0 00-2.25 2.25c0 1.38.56 2.63 1.432 3.513.34.298.744.487 1.188.487s.848-.189 1.188-.487c.872-.883 1.432-2.133 1.432-3.513A2.25 2.25 0 0012 12z" />
+                </svg>
+            </div>
+        </div>
+
+        <p class="intro">
+            Este test interactivo te ayudará a descubrir tus inclinaciones naturales en el vasto mundo de la ingeniería
+            de software. ¡Comencemos!
+        </p>
+
+        <div id="quiz-container">
+            <div id="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+            <div id="question-wrapper" class="question-wrapper">
+                <!-- Las preguntas se cargarán aquí -->
+            </div>
+        </div>
+
+        <section id="results-section">
+            <h2>Tus Resultados</h2>
+            <div id="chart-container">
+                <canvas id="results-chart"></canvas>
+            </div>
+            <div id="detailed-results">
+                <!-- Los resultados detallados se cargarán aquí -->
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Data Definitions ---
+            const questions = [
+                { q: "1. Cuando te encuentras con una aplicación de diseño atractivo e intuitivo, tu primer pensamiento es:", o: { a: "Me pregunto cómo construyeron esas animaciones fluidas y diseños adaptables.", b: "El sistema subyacente debe ser increíblemente eficiente para ser tan rápido y fiable.", c: "Quiero entender el modelo de datos y los algoritmos que impulsan estas recomendaciones inteligentes.", d: "Me pregunto qué microcontrolador y sensores hay dentro de este dispositivo.", e: "Tengo curiosidad por las medidas de seguridad que han implementado para proteger mis datos." } },
+                { q: "2. Te dan a elegir qué tipo de documentación técnica leer. ¿Cuál eliges primero?", o: { a: "Un análisis profundo de una nueva biblioteca de animación para crear interfaces de usuario fluidas.", b: "El informe técnico sobre el algoritmo de consenso de una nueva base de datos distribuida.", c: "Un artículo de investigación sobre una novedosa arquitectura de red neuronal.", d: "La hoja de datos técnicos de 1,000 páginas de un nuevo microprocesador.", e: "Un informe detallado sobre la última vulnerabilidad de día cero y cómo mitigarla." } },
+                { q: "3. ¿Cuál de estas descripciones de proyecto te emociona más?", o: { a: "Construir una interfaz de usuario interactiva y perfecta al píxel para una nueva red social.", b: "Rediseñar nuestra base de datos y API para manejar 10 veces el tráfico actual con menor latencia.", c: "Desarrollar un novedoso algoritmo de machine learning para predecir la pérdida de clientes.", d: "Escribir el firmware para un nuevo dispositivo doméstico inteligente que debe funcionar un año con una batería.", e: "Realizar una prueba de penetración completa de nuestra aplicación bancaria para encontrar agujeros de seguridad." } },
+                { q: "4. Un proyecto se está retrasando. Tu primer instinto es:", o: { a: "Sugerir simplificar elementos complejos de la UI para acelerar el desarrollo sin sacrificar usabilidad.", b: "Analizar el pipeline de despliegue para encontrar oportunidades de automatización que ahorren tiempo.", c: "Reevaluar la arquitectura para ver si un diseño más simple podría cumplir los requisitos con menos código.", d: "Centrarte en tus propias tareas, asegurando que tu parte se entregue con calidad perfecta.", e: "Revisar el conjunto de pruebas para ver si se pueden hacer más eficientes, detectando errores antes." } },
+                { q: "5. Estás más 'en tu salsa' cuando estás:", o: { a: "Traduciendo una visión creativa en un producto tangible e interactivo que la gente puede usar.", b: "Optimizando un sistema complejo, exprimiendo hasta la última gota de rendimiento y eficiencia.", c: "Luchando con un problema abstracto y teórico, buscando una solución elegante y fundamental.", d: "Trabajando metódicamente en un problema complejo donde la precisión y la corrección son críticas.", e: "Pensando como un adversario, tratando de encontrar todas las formas en que un sistema podría fallar." } },
+                { q: "6. ¿Qué tipo de 'desorden' te sientes más cómodo limpiando?", o: { a: "Un CSS inconsistente y un JavaScript enredado que hacen que la UI se comporte de manera errática.", b: "Una API lenta e ineficiente con llamadas redundantes a la base de datos.", c: "Un modelo de 'código espagueti' sin una estructura clara.", d: "Un firmware que ocasionalmente hace que un dispositivo se bloquee por un sutil problema de sincronización.", e: "Un sistema con controles de acceso mal configurados y posibles fugas de datos." } },
+                { q: "7. Un sistema crítico se cae a las 2 de la mañana. Tu instinto inmediato es:", o: { a: "Sumergirte en los registros del sistema y las métricas, rastreando el error hasta su causa raíz.", b: "Empezar a esbozar una nueva arquitectura más resistente que evitaría esta clase de fallos.", c: "Hablar con los usuarios que reportan el problema para entender el impacto exacto.", d: "Escribir un parche rápido para volver a poner el sistema en línea lo antes posible.", e: "Analizar los registros de detección de intrusos para ver si fue causado por actividad maliciosa." } },
+                { q: "8. Tienes tiempo libre para un 'proyecto personal'. ¿Qué construyes?", o: { a: "Una visualización de datos interactiva y visualmente impresionante.", b: "Una configuración de servidor doméstico personal, optimizada para velocidad y fiabilidad.", c: "Un programa que intenta generar poesía o música utilizando un modelo de IA simple.", d: "Un controlador personalizado para tu videojuego favorito, que implica soldar y programar.", e: "Una herramienta que escanea automáticamente tu red doméstica en busca de vulnerabilidades." } },
+                { q: "9. En una sesión de lluvia de ideas en equipo, eres la persona que más a menudo:", o: { a: "Dibuja flujos de usuario en la pizarra y aboga por la experiencia del usuario.", b: "Hace preguntas sobre escalabilidad, fiabilidad y monitorización en producción.", c: "Conecta el problema actual con patrones más amplios y sugiere una solución abstracta.", d: "Señala las limitaciones de bajo nivel y de hardware que el equipo debe considerar.", e: "Plantea preocupaciones sobre posibles vulnerabilidades o casos extremos." } },
+                { q: "10. Al colaborar con un Product Manager no técnico, lo más importante es:", o: { a: "Crear prototipos interactivos para que puedan 'sentir' la experiencia de usuario.", b: "Usar analogías para explicar las restricciones técnicas de escalabilidad y rendimiento.", c: "Entender el 'porqué' fundamental detrás de una solicitud para asegurar que la solución resuelva el problema.", d: "Explicar claramente los límites estrictos y las concesiones impuestas por el hardware.", e: "Discutir posibles riesgos y escenarios de fallo en un lenguaje sencillo." } },
+                { q: "11. Si tuvieras que depurar un problema difícil, preferirías usar:", o: { a: "Las herramientas de desarrollador del navegador (DOM, red, JavaScript).", b: "Un perfilador de sistema y un agregador de registros para analizar cuellos de botella.", c: "Un cuaderno de Jupyter para visualizar distribuciones de datos y salidas de modelos.", d: "Un osciloscopio y un depurador de hardware para comprobar la integridad de la señal.", e: "Un analizador de tráfico como Wireshark y un descompilador." } },
+                { q: "12. ¿Qué afirmación resuena más con tu filosofía sobre el código?", o: { a: "'El código debe ser elegante y expresivo, haciendo que la interacción se sienta sin esfuerzo.'", b: "'El código es una carga; el mejor código es el que no tienes que escribir. El sistema debe ser simple.'", c: "'El código es la implementación de una idea matemática o lógica más profunda.'", d: "'El código debe ser demostrablemente correcto y determinista. La previsibilidad lo es todo.'", e: "'El código debe escribirse a la defensiva, asumiendo que toda entrada es hostil.'" } },
+                { q: "13. El 'éxito' en un proyecto se siente como:", o: { a: "Millones de usuarios disfrutan de la interfaz bonita e intuitiva que construiste.", b: "El sistema que construiste funciona sin problemas a escala masiva con un 99.999% de tiempo de actividad.", c: "Resolviste un problema que nadie había resuelto antes con un algoritmo novedoso y elegante.", d: "El dispositivo que programaste funciona de manera fiable en el mundo real bajo condiciones adversas.", e: "Defendiste con éxito el sistema contra un ciberataque sofisticado del mundo real." } },
+                { q: "14. Estás en una conferencia de tecnología. ¿A qué charla asistes?", o: { a: "'El Futuro de la Animación Web y el Diseño Interactivo'.", b: "'Arquitectura para Mil Millones de Usuarios: Lecciones de un Proveedor de Nube'.", c: "'Más Allá de los Transformers: El Próximo Paradigma en Modelos de Lenguaje de IA'.", d: "'Dominando Sistemas Operativos en Tiempo Real para Aplicaciones de Misión Crítica'.", e: "'Demostración de Hacking en Vivo: Irrumpir en una Red Corporativa Segura'." } },
+                { q: "15. Te sientes más frustrado por:", o: { a: "Interfaces de usuario torpes y poco intuitivas que son difíciles de navegar.", b: "Sistemas ineficientes, lentos y poco fiables que se caen con frecuencia.", c: "Soluciones de fuerza bruta y poco elegantes para problemas complejos.", d: "Software que ignora las limitaciones físicas del hardware en el que se ejecuta.", e: "Sistemas construidos con un desprecio ingenuo por la seguridad y la privacidad." } },
+                { q: "16. ¿Cuál es tu parte favorita del proceso de desarrollo?", o: { a: "El momento en que ves un diseño estático cobrar vida con interactividad.", b: "Ver las métricas de rendimiento y comprobar que tus optimizaciones redujeron la latencia.", c: "El momento '¡eureka!' en la pizarra cuando encuentras el modelo abstracto perfecto.", d: "La fase final de pruebas exhaustivas donde confirmas que el sistema se comporta como se especificó.", e: "Descubrir un caso límite ingenioso o una vulnerabilidad que nadie había considerado." } },
+                { q: "17. ¿Qué tipo de aprendizaje te parece más atractivo?", o: { a: "Dominar un nuevo framework de UI y una biblioteca de animación.", b: "Aprender los detalles del algoritmo de consenso de una base de datos distribuida.", c: "Estudiar teoría de probabilidad avanzada para modelos de machine learning.", d: "Leer la hoja de datos técnicos de 1,000 páginas de un nuevo microprocesador.", e: "Tomar un curso sobre hacking ético e ingeniería inversa." } },
+                { q: "18. ¿Cómo prefieres aprender una tecnología nueva y compleja?", o: { a: "Construyendo pequeños proyectos visuales para experimentar de inmediato.", b: "Leyendo la documentación oficial de principio a fin para entender la arquitectura completa.", c: "Comprendiendo los principios teóricos fundamentales antes de escribir cualquier código.", d: "Obteniendo el hardware y ejecutando el 'hola mundo' en el dispositivo real.", e: "Buscando artículos sobre sus trampas comunes, fallos de seguridad y modos de fallo." } },
+                { q: "19. Cuando construyes algo, tu principal fuente de satisfacción proviene de:", o: { a: "La artesanía y la estética del producto final.", b: "La eficiencia y robustez del sistema subyacente.", c: "La elegancia intelectual y la novedad de la solución.", d: "El control directo y predecible sobre un proceso físico.", e: "La resiliencia y la capacidad de defensa del sistema contra fallos y ataques." } },
+                { q: "20. Un usuario reporta un problema vago: 'La aplicación se siente lenta a veces'. ¿Tu primer paso?", o: { a: "Pedirle que describa exactamente qué estaba haciendo y qué parte se sentía lenta.", b: "Sumergirte en los registros del servidor y paneles de monitoreo para buscar picos de latencia.", c: "Analizar el flujo de datos y la arquitectura para identificar cuellos de botella sistémicos.", d: "Intentar replicar el problema en un dispositivo de prueba, anotando cada paso.", e: "Considerar si la lentitud podría ser un síntoma de un problema más profundo, como un ataque." } }
+            ];
+
+            const scoringKey = {
+                1: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 2: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                3: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 4: { a: 'EPS', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                5: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 6: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                7: { a: 'OS', b: 'AT', c: 'EPS', d: 'OS', e: 'DS' }, 8: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                9: { a: 'EPS', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 10: { a: 'VA', b: 'OS', c: 'EPS', d: 'PE', e: 'DS' },
+                11: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 12: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                13: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 14: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                15: { a: 'EPS', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 16: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                17: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 18: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' },
+                19: { a: 'VA', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }, 20: { a: 'EPS', b: 'OS', c: 'AT', d: 'PE', e: 'DS' }
+            };
+
+            const archetypeDetails = {
+                VA: { name: 'Arquitecto Visual', description: 'Te impulsa el deseo de crear productos tangibles, interactivos y estéticamente agradables. Tienes un fuerte sentido de empatía con el usuario y te fascina cómo las personas interactúan con la tecnología.', roles: { 'Frontend': 'https://roadmap.sh/frontend', 'Mobile': 'https://roadmap.sh/react-native', 'UI/UX Design': 'https://roadmap.sh/ux-design', 'Game Dev': 'https://roadmap.sh/gamedev' } },
+                OS: { name: 'Optimizador de Sistemas', description: 'Te cautiva el funcionamiento interno de sistemas complejos. Te motiva la eficiencia, la escalabilidad, el rendimiento y la fiabilidad. Disfrutas haciendo que los sistemas funcionen más rápido y a gran escala.', roles: { 'Backend': 'https://roadmap.sh/backend', 'DevOps': 'https://roadmap.sh/devops', 'Data Engineer': 'https://roadmap.sh/ai-engineer', 'Cloud (AWS)': 'https://roadmap.sh/aws' } },
+                AT: { name: 'Pensador Abstracto', description: 'Prosperas con el diseño de alto nivel, el reconocimiento de patrones y los desafíos teóricos. Quieres encontrar una solución más general y elegante. Te atraen los campos con algoritmos complejos y modelos abstractos.', roles: { 'AI/ML': 'https://roadmap.sh/ai-data-scientist', 'Software Architect': 'https://roadmap.sh/software-architect' } },
+                PE: { name: 'Ingeniero de Precisión', description: 'Encuentras satisfacción en entornos donde la corrección y la fiabilidad son primordiales. Disfrutas trabajando cerca del hardware y lidiando con restricciones físicas del mundo real.', roles: { 'Sistemas Embebidos': 'https://roadmap.sh/embedded', 'Robótica': 'https://roadmap.sh/robotics' } },
+                DS: { name: 'Centinela Digital', description: 'Posees una mentalidad estratégica y adversaria. Piensas naturalmente en cómo los sistemas pueden fallar, ser mal utilizados o atacados. Disfrutas anticipando amenazas y construyendo sistemas defensivos.', roles: { 'Ciberseguridad': 'https://roadmap.sh/cyber-security', 'QA / SDET': 'https://roadmap.sh/qa' } },
+                EPS: { name: 'Solucionador Empático', description: 'Tu motivación principal es comprender y resolver problemas humanos. Eres hábil para ponerte en el lugar del usuario y te impulsa hacer la tecnología más accesible y útil, actuando como puente entre producto y técnica.', roles: { 'UI/UX Design': 'https://roadmap.sh/ux-design', 'Frontend': 'https://roadmap.sh/frontend', 'Product Manager': 'https://roadmap.sh/product-manager' } }
+            };
+
+            // --- App State ---
+            let currentQuestionIndex = 0;
+            let scores = { VA: 0, OS: 0, AT: 0, PE: 0, EPS: 0, DS: 0 };
+            let myChart = null;
+
+            // --- DOM Elements ---
+            const quizContainer = document.getElementById('quiz-container');
+            const questionWrapper = document.getElementById('question-wrapper');
+            const progressBar = document.getElementById('progress-bar');
+            const resultsSection = document.getElementById('results-section');
+            const detailedResults = document.getElementById('detailed-results');
+            const themeSwitcher = document.getElementById('theme-switcher');
+
+            // --- Functions ---
+            function renderQuestion() {
+                const questionData = questions[currentQuestionIndex];
+                let optionsHtml = '<ul class="options-list">';
+                for (const [key, value] of Object.entries(questionData.o)) {
+                    optionsHtml += `
+                        <li>
+                            <label>
+                                <input type="radio" name="q${currentQuestionIndex}" value="${key}">
+                                ${value}
+                            </label>
+                        </li>
+                    `;
+                }
+                optionsHtml += '</ul>';
+
+                questionWrapper.innerHTML = `
+                    <p class="question-text">${questionData.q}</p>
+                    ${optionsHtml}
+                `;
+
+                // Add event listeners to new options
+                document.querySelectorAll(`input[name="q${currentQuestionIndex}"]`).forEach(input => {
+                    input.addEventListener('change', handleOptionSelect);
+                });
+            }
+
+            function handleOptionSelect(event) {
+                const selectedValue = event.target.value;
+                const questionNum = currentQuestionIndex + 1;
+                const archetype = scoringKey[questionNum][selectedValue];
+                if (archetype) {
+                    scores[archetype]++;
+                }
+
+                // Animate to next question
+                questionWrapper.classList.add('fade-out');
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    updateProgressBar();
+                    if (currentQuestionIndex < questions.length) {
+                        renderQuestion();
+                        questionWrapper.classList.remove('fade-out');
+                    } else {
+                        showResults();
+                    }
+                }, 400);
+            }
+
+            function updateProgressBar() {
+                const progress = (currentQuestionIndex / questions.length) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+
+            function showResults() {
+                quizContainer.style.display = 'none';
+                resultsSection.classList.add('visible');
+
+                const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+                renderResultsChart(sortedScores);
+                renderDetailedResults(sortedScores);
+
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function renderResultsChart(sortedScores) {
+                const ctx = document.getElementById('results-chart').getContext('2d');
+                const labels = sortedScores.map(score => archetypeDetails[score[0]].name);
+                const data = sortedScores.map(score => score[1]);
+
+                const chartTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+                const chartGridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color');
+
+                if (myChart) myChart.destroy();
+
+                myChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Tu Puntuación',
+                            data: data,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                angleLines: { color: chartGridColor },
+                                grid: { color: chartGridColor },
+                                pointLabels: { color: chartTextColor, font: { size: 12 } },
+                                ticks: {
+                                    color: chartTextColor,
+                                    backdropColor: 'transparent',
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderDetailedResults(sortedScores) {
+                let resultsHtml = '';
+                sortedScores.forEach((score, index) => {
+                    const [key, value] = score;
+                    if (value > 0) {
+                        const details = archetypeDetails[key];
+                        let rolesHtml = '';
+                        for (const [role, url] of Object.entries(details.roles)) {
+                            rolesHtml += `<a href="${url}" target="_blank" class="role-link">${role}</a>`;
+                        }
+
+                        resultsHtml += `
+                            <div class="archetype-card ${index === 0 ? 'primary' : ''}">
+                                <div class="archetype-header">
+                                    <h3 class="archetype-title">${details.name}</h3>
+                                    <span class="archetype-score">Puntos: ${value}</span>
+                                </div>
+                                <p>${details.description}</p>
+                                <h3>Posibles Carreras Profesionales:</h3>
+                                <div class="role-links">${rolesHtml}</div>
+                            </div>
+                        `;
+                    }
+                });
+                detailedResults.innerHTML = resultsHtml;
+            }
+
+            // --- Theme Switcher Logic ---
+            function setInitialTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+
+            themeSwitcher.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+
+                // Re-render chart with new colors if it exists
+                if (myChart) {
+                    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+                    setTimeout(() => renderResultsChart(sortedScores), 100);
+                }
+            });
+
+            // --- Initialisation ---
+            setInitialTheme();
+            renderQuestion();
+        });
+    </script>
+
+</body>
+
+</html>
